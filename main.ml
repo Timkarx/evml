@@ -1,21 +1,16 @@
 open Lib
 
-(* 1. Instantiate the modules using the Functors *)
-(* We assume Lib exports a module named 'Stack' that satisfies VMStack *)
 module EvmState = State.MakeState(Stack)
 module EvmOpcodes = Opcodes.Operations(EvmState)
 
-(* 2. Define the Virtual Machine Execution Loop *)
 let run_vm (state: EvmState.t) bytecode =
   let len = String.length bytecode in
-
   Printf.printf "Starting Execution. Bytecode length: %d\n" len;
 
   while state.running && state.pc < len do
     let byte = bytecode.[state.pc] in
 
     try
-      (* Decode the current byte into an Opcode variant *)
       match EvmOpcodes.decode_opcode byte with
       | STOP f | ADD f | MUL f | SUB f | DIV f -> 
             ignore (f state)

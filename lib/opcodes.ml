@@ -6,12 +6,12 @@ module Operations (State : sig
     val halt_execution : t -> t
 end) = struct
     exception InvalidOpcode
-    type opcode = 
-      | STOP of (State.t -> State.t)
-      | ADD of (State.t -> State.t)
-      | MUL of (State.t -> State.t)
-      | SUB of (State.t -> State.t)
-      | DIV of (State.t -> State.t)
+    type 'a opcode = 
+      | STOP of 'a
+      | ADD of 'a
+      | MUL of 'a
+      | SUB of 'a
+      | DIV of 'a
 
     let maths operator state =
       let a = State.pop_stack state in
