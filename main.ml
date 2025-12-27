@@ -6,48 +6,28 @@ module EvmState = State.MakeState(Stack)
 module EvmOpcodes = Opcodes.Operations(EvmState)
 
 (* 2. Define the Virtual Machine Execution Loop *)
-let run_vm state bytecode =
-  let pc = ref 0 in
-  let running = ref true in
+let run_vm (state: EvmState.t) bytecode =
   let len = String.length bytecode in
 
   Printf.printf "Starting Execution. Bytecode length: %d\n" len;
 
-  while !running && !pc < len do
-    let byte = bytecode.[!pc] in
-    incr pc;
+  while state.running && state.pc < len do
+    let byte = bytecode.[state.pc] in
 
     try
       (* Decode the current byte into an Opcode variant *)
       match EvmOpcodes.decode_opcode byte with
-      | EvmOpcodes.STOP _ -> 
-          (* Handle STOP: We do NOT execute the function inside it 
-             (because in your definition it does an ADD), we just break the loop. *)
-          print_endline "Opcode: STOP -> Halting";
-          running := false
-
-      (* For arithmetic, we extract the function 'f' and apply it to 'state' *)
-      | EvmOpcodes.ADD f -> 
-          print_endline "Opcode: ADD"; 
-          ignore (f state)
-      | EvmOpcodes.MUL f -> 
-          print_endline "Opcode: MUL"; 
-          ignore (f state)
-      | EvmOpcodes.SUB f -> 
-          print_endline "Opcode: SUB"; 
-          ignore (f state)
-      | EvmOpcodes.DIV f -> 
-          print_endline "Opcode: DIV"; 
-          ignore (f state)
+      | STOP f | ADD f | MUL f | SUB f | DIV f -> 
+            ignore (f state)
 
     with
     | EvmOpcodes.InvalidOpcode ->
-        Printf.printf "Error: Invalid opcode at position %d\n" (!pc - 1);
-        running := false
+        Printf.printf "Error: Invalid opcode at position %d\n" (state.pc - 1);
+        ignore (EvmState.halt_execution state)
     | Failure msg -> 
         (* Catches "Stack Underflow" from the Stack module *)
         Printf.printf "Error: %s\n" msg;
-        running := false
+        ignore (EvmState.halt_execution state)
   done
 
 (* 3. The Main Entry Point *)
@@ -77,7 +57,7 @@ let () =
      \x02 = MUL
      \x00 = STOP
   *)
-  let code = "\x01\x02\x00" in
+  let code = "\x01\x01\x00" in
 
   (* D. Run *)
   print_endline "--- Running Bytecode ---";

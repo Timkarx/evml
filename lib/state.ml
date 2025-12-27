@@ -13,15 +13,24 @@ module MakeState (S: VMStack) = struct
     type t = { 
         mutable stack : S.t;
         mutable memory : Memory.t;
+        mutable running : bool;
+        mutable pc : int;
     }
     let create_empty () = {
         stack = S.empty;
         memory = Memory.default ();
+        running = true;
+        pc = 0;
     }
 
-    let update_stack state stack =
-        state.stack <- stack; state
-    
+    let halt_execution state =
+        state.running <- false;
+        state
+
+    let increment_pc state =
+        state.pc <- state.pc + 1;
+        state
+
     let pop_stack state =
         let value, new_stack = S.pop state.stack in
         state.stack <- new_stack;
